@@ -62,3 +62,39 @@ resource "null_resource" "aws_src_dst_checks" {
   }
 }
 
+
+# Create node group in the created vpc using created node role
+resource "aws_eks_node_group" "private-nodes" {
+  depends_on      = [null_resource.aws_src_dst_checks]
+  cluster_name    = aws_eks_cluster.cluster.name
+  node_group_name = "private-nodes"
+  node_role_arn   = module.eks-iam-roles.node_role
+
+  subnet_ids = [
+    for i in range(length(module.eks-vpc.private)) : module.eks-vpc.private[i]
+  ]
+
+  capacity_type  = "ON_DEMAND"
+  instance_types = ["t2.medium"]
+
+
+  scaling_config {
+    desired_size = 2
+    max_size     = 10
+    min_size     = 0
+  }
+
+  update_config {
+    max_unavailable = 1
+  }
+
+  labels = {
+    role = "devops"
+  }
+
+  tags = {
+    "k8s.io/cluster-autoscaler/demo"    = "owned"
+    "k8s.io/cluster-autoscaler/enabled" = true
+  }
+
+}
