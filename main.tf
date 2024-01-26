@@ -7,7 +7,7 @@ module "eks-iam-roles" {
 
 module "eks-vpc" {
   source             = "quadri-olamilekan/eks-vpc/aws"
-  version            = "1.0.2"
+  version            = "1.0.4"
   region             = var.region
   vpc_cidr           = var.vpc_cidr
   project            = var.project
@@ -19,6 +19,7 @@ module "eks-vpc" {
 
 resource "aws_eks_cluster" "cluster" {
   name     = var.project
+  version = 1.29
   role_arn = module.eks-iam-roles.cluster_role
 
   vpc_config {
@@ -49,7 +50,7 @@ resource "null_resource" "install_calico" {
   depends_on = [null_resource.rm_aws_node]
 
   provisioner "local-exec" {
-    command = "kubectl apply -f https://raw.githubusercontent.com/projectcalico/calico/v3.27.0/manifests/calico-vxlan.yaml"
+    command = "kubectl apply -f ./manifests/calico-vxlan.yaml"
   }
 }
 
@@ -88,11 +89,11 @@ resource "aws_eks_node_group" "private-nodes" {
   }
 
   labels = {
-    role = "devops"
+    role = "private-node"
   }
 
   tags = {
-    "k8s.io/cluster-autoscaler/demo"    = "owned"
+    "k8s.io/cluster-autoscaler/${var.project}"    = "owned"
     "k8s.io/cluster-autoscaler/enabled" = true
   }
 
@@ -122,12 +123,13 @@ resource "aws_eks_node_group" "public-nodes" {
   }
 
   labels = {
-    role = "devops"
+    role = "public-node"
   }
 
   tags = {
-    "k8s.io/cluster-autoscaler/demo"    = "owned"
+    "k8s.io/cluster-autoscaler/${var.project}"    = "owned"
     "k8s.io/cluster-autoscaler/enabled" = true
   }
 
 }
+
