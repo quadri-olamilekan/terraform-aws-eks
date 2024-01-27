@@ -19,7 +19,7 @@ module "eks-vpc" {
 
 resource "aws_eks_cluster" "cluster" {
   name     = var.project
-  version = 1.29
+  version  = 1.29
   role_arn = module.eks-iam-roles.cluster_role
 
   vpc_config {
@@ -50,7 +50,7 @@ resource "null_resource" "install_calico" {
   depends_on = [null_resource.rm_aws_node]
 
   provisioner "local-exec" {
-    command = "kubectl apply -f ./manifests/calico-vxlan.yaml"
+    command = "kubectl apply -f ./manifests/calico-vxlan.yaml  --server=${aws_eks_cluster.cluster.endpoint}"
   }
 }
 
@@ -59,77 +59,6 @@ resource "null_resource" "aws_src_dst_checks" {
   depends_on = [null_resource.install_calico]
 
   provisioner "local-exec" {
-    command = "kubectl -n kube-system set env daemonset/calico-node FELIX_AWSSRCDSTCHECK=Disable"
+    command = "kubectl -n kube-system set env daemonset/calico-node FELIX_AWSSRCDSTCHECK=Disable  --server=${aws_eks_cluster.cluster.endpoint}"
   }
 }
-
-
-resource "aws_eks_node_group" "private-nodes" {
-  depends_on      = [null_resource.aws_src_dst_checks]
-  cluster_name    = aws_eks_cluster.cluster.name
-  node_group_name = "private-nodes"
-  node_role_arn   = module.eks-iam-roles.node_role
-
-  subnet_ids = [
-    for i in range(length(module.eks-vpc.private)) : module.eks-vpc.private[i]
-  ]
-
-  capacity_type  = "ON_DEMAND"
-  instance_types = ["t2.medium"]
-
-
-  scaling_config {
-    desired_size = 2
-    max_size     = 10
-    min_size     = 0
-  }
-
-  update_config {
-    max_unavailable = 1
-  }
-
-  labels = {
-    role = "private-node"
-  }
-
-  tags = {
-    "k8s.io/cluster-autoscaler/${var.project}"    = "owned"
-    "k8s.io/cluster-autoscaler/enabled" = true
-  }
-
-}
-
-resource "aws_eks_node_group" "public-nodes" {
-  depends_on      = [null_resource.aws_src_dst_checks]
-  cluster_name    = aws_eks_cluster.cluster.name
-  node_group_name = "public-nodes"
-  node_role_arn   = module.eks-iam-roles.node_role
-
-  subnet_ids = [
-    for i in range(length(module.eks-vpc.public)) : module.eks-vpc.public[i]]
-
-  capacity_type  = "ON_DEMAND"
-  instance_types = ["t2.medium"]
-
-
-  scaling_config {
-    desired_size = 0
-    max_size     = 10
-    min_size     = 0
-  }
-
-  update_config {
-    max_unavailable = 1
-  }
-
-  labels = {
-    role = "public-node"
-  }
-
-  tags = {
-    "k8s.io/cluster-autoscaler/${var.project}"    = "owned"
-    "k8s.io/cluster-autoscaler/enabled" = true
-  }
-
-}
-
