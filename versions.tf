@@ -35,7 +35,15 @@ provider "kubectl" {
   cluster_ca_certificate = local.certificate
   token                  = local.token
   load_config_file       = false
-  
+
+}
+
+provider "helm" {
+  kubernetes {
+    host                   = local.host
+    cluster_ca_certificate = local.certificate
+    token                  = local.token
+  }
 }
 
 data "aws_eks_cluster_auth" "cluster" {

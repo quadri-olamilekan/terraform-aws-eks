@@ -33,4 +33,4 @@ spec:
               - key: role
                 operator: In
                 values:
-                - public-node
+                - private-node
