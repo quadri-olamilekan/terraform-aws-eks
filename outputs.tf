@@ -8,6 +8,7 @@ output "cluster_certificate_authority_data" {
   description = "The base64-encoded certificate data required to communicate with the EKS cluster securely"
 }
 
+/*
 output "test_policy_arn" {
   value = aws_iam_role.oidc.arn
 }
@@ -23,3 +24,4 @@ output "oidc-arn" {
 output "eks_cluster_autoscaler_arn" {
   value = aws_iam_role.eks_cluster_autoscaler.arn
 }
+*/
