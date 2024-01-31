@@ -8,20 +8,26 @@ output "cluster_certificate_authority_data" {
   description = "The base64-encoded certificate data required to communicate with the EKS cluster securely"
 }
 
-/*
-output "test_policy_arn" {
-  value = aws_iam_role.oidc.arn
+output "cluster_name" {
+  value = aws_eks_cluster.cluster.name
+  description = "Cluster name"
 }
 
-output "oidc-url" {
-  value = aws_iam_openid_connect_provider.eks.url
+output "cluster_url" {
+  value = aws_eks_cluster.cluster.identity[0].oidc[0].issuer
+  description = "cluster url"
 }
 
-output "oidc-arn" {
-  value = aws_iam_openid_connect_provider.eks.arn
+output "node_role" {
+  value       = module.eks-iam-roles.node_role
+  description = "The ARN of the EKS node role"
 }
 
-output "eks_cluster_autoscaler_arn" {
-  value = aws_iam_role.eks_cluster_autoscaler.arn
+output "private" {
+  value = module.eks-vpc.private
 }
-*/
+
+output "public" {
+  value = module.eks-vpc.public
+
+}

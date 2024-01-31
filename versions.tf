@@ -11,7 +11,16 @@ terraform {
       source  = "gavinbunney/kubectl"
       version = ">= 1.13.11"
     }
+
   }
+  backend "s3" {
+    bucket = "s3-eks-iam-roles-repo-12-source"
+    key    = "eks/terraform.tfstate"
+    #dynamodb_table = "terraform-lock"
+    region = "us-east-1"
+
+  }
+
 }
 
 provider "aws" {
