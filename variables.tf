@@ -45,7 +45,6 @@ variable "pgp_key" {
   description = "PGP key used for encrypting user login profiles"
 }
 
-
 variable "developer" {
   type        = list(string)
   default     = []
